@@ -68,11 +68,12 @@ export default function DashboardPage() {
           status={currentData.temperature > 37.5 ? "Elevated" : "Normal"}
         />
         <HealthCard 
-          title="Pillow Status" 
-          value={currentData.patientPresent ? "Occupied" : "Empty"} 
+          title="FSR Pressure" 
+          value={currentData.pressure?.fsr1 ?? 0} 
+          unit="ADC" 
           icon={BedDouble} 
           colorClass="bg-primary text-primary" 
-          status={currentData.patientPresent ? "Active" : "Inactive"}
+          status={currentData.patientPresent ? "Patient Present" : "No Pressure"}
         />
         <HealthCard 
           title="Activity Level" 
@@ -106,7 +107,7 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <BedDouble className="w-5 h-5 text-primary" />
-              Pillow Pressure
+              FSR Pressure Sensor (GPIO 34)
             </h2>
           </div>
           <PressureHeatmap />

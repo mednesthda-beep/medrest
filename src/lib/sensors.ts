@@ -6,10 +6,7 @@ export type SensorData = {
   temperature: number;
   movement: { x: number; y: number; z: number };
   pressure: {
-    fsr1: number; fsr2: number;
-    fsr3: number; fsr4: number;
-    fsr5: number; fsr6: number;
-    fsr7: number; fsr8: number;
+    fsr1: number;
   };
   patientPresent: boolean;
   timestamp: string;
@@ -45,8 +42,8 @@ const generateBaseReading = (status: 'normal' | 'abnormal' | 'emergency' | 'inac
   }
 
   // Generate pressure based on presence
-  const basePressure = isPresent ? 300 : 0;
-  const pressureVariance = isPresent ? 150 : 0;
+  const basePressure = isPresent ? 1400 : 0;
+  const pressureVariance = isPresent ? 300 : 0;
 
   return {
     heartRate: isPresent ? hr : 0,
@@ -59,13 +56,6 @@ const generateBaseReading = (status: 'normal' | 'abnormal' | 'emergency' | 'inac
     },
     pressure: {
       fsr1: Math.max(0, basePressure + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr2: Math.max(0, basePressure + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr3: Math.max(0, basePressure + 50 + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr4: Math.max(0, basePressure + 50 + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr5: Math.max(0, basePressure + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr6: Math.max(0, basePressure + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr7: Math.max(0, basePressure - 50 + (Math.random() * pressureVariance - pressureVariance/2)),
-      fsr8: Math.max(0, basePressure - 50 + (Math.random() * pressureVariance - pressureVariance/2)),
     },
     patientPresent: isPresent,
     timestamp: new Date().toISOString()
@@ -78,7 +68,7 @@ export const useSensorStore = create<SensorState>((set, get) => ({
     spo2: 0,
     temperature: 0,
     movement: { x: 0, y: 0, z: 0 },
-    pressure: { fsr1: 0, fsr2: 0, fsr3: 0, fsr4: 0, fsr5: 0, fsr6: 0, fsr7: 0, fsr8: 0 },
+    pressure: { fsr1: 0 },
     patientPresent: false,
     timestamp: new Date().toISOString()
   },

@@ -59,9 +59,16 @@ export default function DevicesPage() {
             <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
               <div className="flex items-center gap-3">
                 <Activity className="w-5 h-5 text-muted-foreground" />
-                <span>FSR Sensors</span>
+                <span>FSR Pressure Sensor (GPIO 34)</span>
               </div>
-              <span className="text-health-good text-sm font-medium">8/8 ONLINE</span>
+              <span className="text-health-good text-sm font-medium">1/1 ONLINE</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-muted-foreground" />
+                <span>DS18B20 Temp Sensor (GPIO 4)</span>
+              </div>
+              <span className="text-health-good text-sm font-medium">ONLINE</span>
             </div>
           </div>
 

@@ -8,8 +8,7 @@ let latestSensorData: any = {
   temperature: 0,
   movement: { x: 0, y: 0, z: 0 },
   pressure: {
-    fsr1: 0, fsr2: 0, fsr3: 0, fsr4: 0,
-    fsr5: 0, fsr6: 0, fsr7: 0, fsr8: 0
+    fsr1: 0
   },
   patientPresent: false,
   timestamp: new Date().toISOString()
@@ -39,13 +38,6 @@ export async function GET() {
           },
           pressure: {
             fsr1: Number(row.fsr ?? 0),
-            fsr2: Number(row.fsr ?? 0),
-            fsr3: Number(row.fsr ?? 0),
-            fsr4: Number(row.fsr ?? 0),
-            fsr5: Number(row.fsr ?? 0),
-            fsr6: Number(row.fsr ?? 0),
-            fsr7: Number(row.fsr ?? 0),
-            fsr8: Number(row.fsr ?? 0),
           },
           patientPresent: Boolean(row.patient_present),
           timestamp: row.created_at
@@ -70,20 +62,10 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
 
-    // Map/normalize payload from ESP32
-    const fsr = typeof data.fsr === 'number' ? data.fsr : (data.pressure?.fsr1 ?? 0);
-    const pressureObj = data.pressure && typeof data.pressure === 'object' ? {
-      fsr1: Number(data.pressure.fsr1 ?? fsr),
-      fsr2: Number(data.pressure.fsr2 ?? fsr),
-      fsr3: Number(data.pressure.fsr3 ?? fsr),
-      fsr4: Number(data.pressure.fsr4 ?? fsr),
-      fsr5: Number(data.pressure.fsr5 ?? fsr),
-      fsr6: Number(data.pressure.fsr6 ?? fsr),
-      fsr7: Number(data.pressure.fsr7 ?? fsr),
-      fsr8: Number(data.pressure.fsr8 ?? fsr),
-    } : {
-      fsr1: fsr, fsr2: fsr, fsr3: fsr, fsr4: fsr,
-      fsr5: fsr, fsr6: fsr, fsr7: fsr, fsr8: fsr,
+    // Map single FSR reading from ESP32
+    const fsr = typeof data.fsr === 'number' ? data.fsr : Number(data.pressure?.fsr1 ?? 0);
+    const pressureObj = {
+      fsr1: fsr,
     };
 
     const isPresent = Boolean(
