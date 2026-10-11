@@ -1,7 +1,7 @@
 "use client";
 
 import { useSensorStore } from '@/lib/sensors';
-import { ShieldCheck, Activity } from 'lucide-react';
+import { Activity } from 'lucide-react';
 
 export function PressureHeatmap() {
   const { currentData } = useSensorStore();

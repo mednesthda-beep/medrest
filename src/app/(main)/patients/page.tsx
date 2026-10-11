@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus, UserCircle, Phone, Calendar, MoreVertical, MapPin } from "lucide-react";
+import { Search, Plus, MoreVertical } from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 
 export default function PatientsPage() {

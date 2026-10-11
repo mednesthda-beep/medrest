@@ -23,7 +23,7 @@ export default function MedicationsPage() {
       </header>
 
       <div className="glass-card rounded-2xl p-6 border border-border/50">
-        <h2 className="text-xl font-bold mb-6">Today's Schedule</h2>
+        <h2 className="text-xl font-bold mb-6">Today&apos;s Schedule</h2>
         
         <div className="space-y-4">
           {medications.map((med) => (

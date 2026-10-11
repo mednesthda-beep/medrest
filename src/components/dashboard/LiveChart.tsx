@@ -1,18 +1,13 @@
 "use client";
 
-import { useEffect } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useSensorStore } from '@/lib/sensors';
 
 export function LiveChart() {
-  const { history, generateReading } = useSensorStore();
-
-  useEffect(() => {
-    // Real data will be populated from external source
-  }, []);
+  const { history } = useSensorStore();
 
   // Format data for Recharts
-  const data = history.map((h, i) => ({
+  const data = history.map((h) => ({
     time: new Date(h.timestamp).toLocaleTimeString([], { minute: '2-digit', second: '2-digit' }),
     heartRate: h.heartRate,
     spo2: h.spo2,

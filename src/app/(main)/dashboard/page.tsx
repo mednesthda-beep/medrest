@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
 import { Activity, Heart, Thermometer, Wind, BedDouble, Pill, PersonStanding } from "lucide-react";
 import { HealthCard } from "@/components/dashboard/HealthCard";
 import { LiveChart } from "@/components/dashboard/LiveChart";
@@ -10,11 +9,7 @@ import { useSensorStore } from "@/lib/sensors";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { currentData, generateReading } = useSensorStore();
-
-  useEffect(() => {
-    // Fake interval removed as requested. Real data will be fetched or pushed via ESP32.
-  }, []);
+  const { currentData } = useSensorStore();
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -30,7 +25,7 @@ export default function DashboardPage() {
           <h1 className="text-3xl font-bold tracking-tight text-foreground">
             {getGreeting()}, {user?.name?.split(' ')[0] || 'User'}
           </h1>
-          <p className="text-muted-foreground mt-1">Here's the latest health summary from the smart pillow.</p>
+          <p className="text-muted-foreground mt-1">Here&apos;s the latest health summary from the smart pillow.</p>
         </div>
         <div className="flex items-center gap-2 bg-health-good/10 text-health-good px-4 py-2 rounded-full border border-health-good/20 text-sm font-medium">
           <div className="w-2 h-2 rounded-full bg-health-good animate-pulse" />

@@ -53,7 +53,7 @@ export default function EmergencyPage() {
                   onClick={() => setAcknowledged(true)}
                   className="bg-secondary hover:bg-secondary/80 text-foreground py-3 px-6 rounded-xl transition-colors font-medium border border-border"
                 >
-                  I'm OK (Cancel)
+                  I&apos;m OK (Cancel)
                 </button>
               ) : (
                 <button className="bg-secondary hover:bg-secondary/80 text-foreground py-3 px-6 rounded-xl transition-colors font-medium border border-border flex items-center justify-center gap-2">

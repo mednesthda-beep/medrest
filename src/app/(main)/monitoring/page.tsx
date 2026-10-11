@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Heart, Wind, Thermometer, Info } from "lucide-react";
+import { Activity, Heart, Info } from "lucide-react";
 import { LiveChart } from "@/components/dashboard/LiveChart";
 import { PressureHeatmap } from "@/components/dashboard/PressureHeatmap";
 import { useSensorStore } from "@/lib/sensors";

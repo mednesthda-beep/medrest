@@ -42,7 +42,7 @@ export default function MainLayout({
             updateRealData(json.currentData);
           }
         }
-      } catch (err) {
+      } catch {
         // Ignore fetch errors during navigation or idle
       }
     };

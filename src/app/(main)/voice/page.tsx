@@ -21,7 +21,23 @@ export default function VoiceAssistantPage() {
     setTranscript("Listening... try saying 'What's my heart rate?'");
     
     // Check if browser supports speech recognition
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const windowWithSpeech = window as unknown as {
+      SpeechRecognition?: new () => {
+        continuous: boolean;
+        lang: string;
+        onresult: (event: { results: Array<Array<{ transcript: string }>> }) => void;
+        onerror: () => void;
+        start: () => void;
+      };
+      webkitSpeechRecognition?: new () => {
+        continuous: boolean;
+        lang: string;
+        onresult: (event: { results: Array<Array<{ transcript: string }>> }) => void;
+        onerror: () => void;
+        start: () => void;
+      };
+    };
+    const SpeechRecognition = windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setTranscript("Speech recognition is not supported in this browser.");
       setIsListening(false);
@@ -32,7 +48,7 @@ export default function VoiceAssistantPage() {
     recognition.continuous = false;
     recognition.lang = 'en-US';
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: { results: Array<Array<{ transcript: string }>> }) => {
       const text = event.results[0][0].transcript.toLowerCase();
       setTranscript(`You said: "${text}"`);
       processCommand(text);
@@ -109,10 +125,10 @@ export default function VoiceAssistantPage() {
           Supported Commands
         </h3>
         <ul className="list-disc list-inside text-sm text-muted-foreground space-y-1">
-          <li>"What's my heart rate?"</li>
-          <li>"What's my temperature?"</li>
-          <li>"When is my next medicine?"</li>
-          <li>"What is my blood oxygen?"</li>
+          <li>&ldquo;What&apos;s my heart rate?&rdquo;</li>
+          <li>&ldquo;What&apos;s my temperature?&rdquo;</li>
+          <li>&ldquo;When is my next medicine?&rdquo;</li>
+          <li>&ldquo;What is my blood oxygen?&rdquo;</li>
         </ul>
       </div>
     </div>

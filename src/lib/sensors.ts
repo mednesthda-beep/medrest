@@ -21,48 +21,7 @@ interface SensorState {
   generateReading: () => void;
 }
 
-const generateBaseReading = (status: 'normal' | 'abnormal' | 'emergency' | 'inactive'): SensorData => {
-  const isPresent = status !== 'inactive';
-  
-  // Base normal values
-  let hr = 70 + Math.floor(Math.random() * 10) - 5;
-  let spo2 = 98 - Math.floor(Math.random() * 2);
-  let temp = 36.6 + (Math.random() * 0.4 - 0.2);
-  
-  if (status === 'abnormal') {
-    hr = 105 + Math.floor(Math.random() * 15);
-    temp = 38.2 + Math.random() * 0.5;
-  } else if (status === 'emergency') {
-    hr = 140 + Math.floor(Math.random() * 20);
-    spo2 = 91 - Math.floor(Math.random() * 5);
-  } else if (status === 'inactive') {
-    hr = 0;
-    spo2 = 0;
-    temp = 0;
-  }
-
-  // Generate pressure based on presence
-  const basePressure = isPresent ? 1400 : 0;
-  const pressureVariance = isPresent ? 300 : 0;
-
-  return {
-    heartRate: isPresent ? hr : 0,
-    spo2: isPresent ? spo2 : 0,
-    temperature: isPresent ? Number(temp.toFixed(1)) : 0,
-    movement: {
-      x: isPresent ? Math.random() * 0.2 : 0,
-      y: isPresent ? Math.random() * 0.2 : 0,
-      z: isPresent ? 0.9 + Math.random() * 0.1 : 0,
-    },
-    pressure: {
-      fsr1: Math.max(0, basePressure + (Math.random() * pressureVariance - pressureVariance/2)),
-    },
-    patientPresent: isPresent,
-    timestamp: new Date().toISOString()
-  };
-};
-
-export const useSensorStore = create<SensorState>((set, get) => ({
+export const useSensorStore = create<SensorState>((set) => ({
   currentData: {
     heartRate: 0,
     spo2: 0,

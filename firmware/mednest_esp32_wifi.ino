@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 #include <Wire.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
@@ -23,9 +24,10 @@
 const char* WIFI_SSID     = "YOUR_WIFI_SSID";
 const char* WIFI_PASSWORD = "YOUR_WIFI_PASSWORD";
 
-// MedNest Guardian Next.js Server API Endpoint
-// Change to your computer's local LAN IP (e.g., http://192.168.1.6:3000/api/sensor-data)
-const char* SERVER_URL    = "http://192.168.1.6:3000/api/sensor-data";
+// MedNest Guardian API Endpoint:
+// - For Vercel Cloud: "https://<your-project>.vercel.app/api/sensor-data"
+// - For Local LAN Dev: "http://192.168.1.6:3000/api/sensor-data"
+const char* SERVER_URL    = "https://your-project.vercel.app/api/sensor-data";
 
 // Telemetry transmit interval (in milliseconds)
 const unsigned long TELEMETRY_INTERVAL = 1000; // Transmit every 1 second
@@ -88,7 +90,7 @@ void connectToWiFi() {
 }
 
 // ============================================================================
-// 5. HELPER: TRANSMIT TELEMETRY OVER HTTP POST
+// 5. HELPER: TRANSMIT TELEMETRY OVER HTTP / HTTPS POST
 // ============================================================================
 void sendTelemetryData() {
   if (WiFi.status() != WL_CONNECTED) {
@@ -97,9 +99,20 @@ void sendTelemetryData() {
   }
 
   HTTPClient http;
-  http.begin(SERVER_URL);
+  WiFiClient regularClient;
+  WiFiClientSecure secureClient;
+
+  // Detect whether target endpoint is HTTPS (e.g. Vercel) or HTTP (local LAN)
+  String urlStr = String(SERVER_URL);
+  if (urlStr.startsWith("https://")) {
+    secureClient.setInsecure(); // Skip TLS certificate authority verification on ESP32
+    http.begin(secureClient, SERVER_URL);
+  } else {
+    http.begin(regularClient, SERVER_URL);
+  }
+
   http.addHeader("Content-Type", "application/json");
-  http.setTimeout(1200); // 1.2s timeout to avoid starving heart rate loop
+  http.setTimeout(2500); // 2.5s timeout for cloud server round-trip
 
   // Estimate SpO2 (if finger detected, ~96-99%)
   float estimatedSpo2 = (irValue > 50000 && heartRate > 40) ? 98.0 : 0.0;

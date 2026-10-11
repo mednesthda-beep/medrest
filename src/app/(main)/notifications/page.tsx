@@ -15,54 +15,56 @@ interface Notification {
   read: boolean;
 }
 
+const initialNotifications: Notification[] = [
+  {
+    id: "1",
+    type: "emergency",
+    title: "Possible Fall Detected",
+    description: "Sudden movement change detected. Patient was unresponsive for 30s.",
+    timestamp: "2026-10-11T13:20:00.000Z",
+    severity: "high",
+    read: false,
+  },
+  {
+    id: "2",
+    type: "sensor",
+    title: "High Heart Rate Alert",
+    description: "Heart rate exceeded 100 BPM for over 5 minutes.",
+    timestamp: "2026-10-11T12:40:00.000Z",
+    severity: "medium",
+    read: false,
+  },
+  {
+    id: "3",
+    type: "medication",
+    title: "Medication Reminder",
+    description: "Time to take Metformin 500mg.",
+    timestamp: "2026-10-11T11:20:00.000Z",
+    severity: "medium",
+    read: true,
+  },
+  {
+    id: "4",
+    type: "device",
+    title: "Device Offline",
+    description: "Smart Pillow MEDNEST-001 disconnected from WiFi.",
+    timestamp: "2026-10-10T13:20:00.000Z",
+    severity: "high",
+    read: true,
+  },
+  {
+    id: "5",
+    type: "system",
+    title: "System Update",
+    description: "MedNest software has been updated to v1.2.0.",
+    timestamp: "2026-10-09T13:20:00.000Z",
+    severity: "low",
+    read: true,
+  },
+];
+
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState<Notification[]>([
-    {
-      id: "1",
-      type: "emergency",
-      title: "Possible Fall Detected",
-      description: "Sudden movement change detected. Patient was unresponsive for 30s.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
-      severity: "high",
-      read: false
-    },
-    {
-      id: "2",
-      type: "sensor",
-      title: "High Heart Rate Alert",
-      description: "Heart rate exceeded 100 BPM for over 5 minutes.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
-      severity: "medium",
-      read: false
-    },
-    {
-      id: "3",
-      type: "medication",
-      title: "Medication Reminder",
-      description: "Time to take Metformin 500mg.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-      severity: "medium",
-      read: true
-    },
-    {
-      id: "4",
-      type: "device",
-      title: "Device Offline",
-      description: "Smart Pillow MEDNEST-001 disconnected from WiFi.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      severity: "high",
-      read: true
-    },
-    {
-      id: "5",
-      type: "system",
-      title: "System Update",
-      description: "MedNest software has been updated to v1.2.0.",
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-      severity: "low",
-      read: true
-    }
-  ]);
+  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
 
   const markAllRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));

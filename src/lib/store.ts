@@ -1,13 +1,19 @@
 import { create } from 'zustand';
 
+export interface UserProfile {
+  id: string;
+  email?: string;
+  name?: string;
+}
+
 interface AuthState {
-  user: any | null;
+  user: UserProfile | null;
   role: 'patient' | 'guardian' | null;
   isAuthenticated: boolean;
   isDemoMode: boolean;
   theme: 'dark' | 'light';
   setTheme: (theme: 'dark' | 'light') => void;
-  setUser: (user: any | null, role: 'patient' | 'guardian' | null) => void;
+  setUser: (user: UserProfile | null, role: 'patient' | 'guardian' | null) => void;
   toggleDemoMode: () => void;
   logout: () => void;
 }
