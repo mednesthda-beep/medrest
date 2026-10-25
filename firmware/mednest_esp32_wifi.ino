@@ -12,10 +12,11 @@
 // ============================================================================
 // 1. PIN DEFINITIONS (Exact as requested)
 // ============================================================================
-#define FSR_PIN   34
-#define TEMP_PIN  4
-#define SDA_PIN   21
-#define SCL_PIN   22
+#define FSR_PIN          34
+#define TEMP_PIN         4
+#define SDA_PIN          21
+#define SCL_PIN          22
+#define MAX30100_INT_PIN 19  // D19 (GPIO 19) - MAX30100 / MAX30102 Interrupt (INT)
 
 // ============================================================================
 // 2. NETWORK & SERVER CONFIGURATION
@@ -159,6 +160,9 @@ void setup() {
   analogReadResolution(12);
   analogSetPinAttenuation(FSR_PIN, ADC_11db);
 
+  // Configure MAX30100 / MAX30102 Interrupt Pin (D19 / GPIO 19)
+  pinMode(MAX30100_INT_PIN, INPUT_PULLUP);
+
   // Initialize I2C Bus on pins 21 (SDA) and 22 (SCL)
   Wire.begin(SDA_PIN, SCL_PIN);
 
@@ -179,14 +183,14 @@ void setup() {
     Serial.println("MPU6050: NOT detected (check SDA/SCL wiring)");
   }
 
-  // Initialize MAX30102 / MAX30105 Heart Rate Sensor
+  // Initialize MAX30100 / MAX30102 / MAX30105 Heart Rate Sensor (I2C SDA:21, SCL:22, INT:19)
   if (maxSensor.begin(Wire, I2C_SPEED_FAST)) {
-    Serial.println("MAX30102: Connected");
+    Serial.println("MAX30100/MAX30102: Connected (INT Pin: D19)");
     maxSensor.setup();
     maxSensor.setPulseAmplitudeRed(0x1F);
     maxSensor.setPulseAmplitudeIR(0x1F);
   } else {
-    Serial.println("MAX30102: NOT detected (check SDA/SCL wiring)");
+    Serial.println("MAX30100/MAX30102: NOT detected (check SDA:21, SCL:22, INT:19 wiring)");
   }
 
   // Connect to Wi-Fi

@@ -45,7 +45,7 @@ export default function DevicesPage() {
             <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
               <div className="flex items-center gap-3">
                 <Activity className="w-5 h-5 text-muted-foreground" />
-                <span>MAX30102 (HR/SpO₂)</span>
+                <span>MAX30100 / MAX30102 (HR/SpO₂ - INT: D19)</span>
               </div>
               <span className="text-health-good text-sm font-medium">ONLINE</span>
             </div>
