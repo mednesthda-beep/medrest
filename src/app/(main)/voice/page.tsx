@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Mic, MicOff, Volume2, Info } from "lucide-react";
+import { Mic, MicOff, Volume2, Info, Sparkles } from "lucide-react";
 import { useSensorStore } from "@/lib/sensors";
+import { hapticFeedback } from "@/lib/haptics";
 
 export default function VoiceAssistantPage() {
   const [isListening, setIsListening] = useState(false);
@@ -17,6 +18,7 @@ export default function VoiceAssistantPage() {
       return;
     }
 
+    hapticFeedback.medium();
     setIsListening(true);
     setTranscript("Listening... try saying 'What's my heart rate?'");
     
@@ -115,6 +117,33 @@ export default function VoiceAssistantPage() {
               <p className="text-foreground">{response}</p>
             </div>
           )}
+
+          {/* Quick-tap Queries for Mobile Touch */}
+          <div className="pt-2">
+            <p className="text-xs text-muted-foreground uppercase font-semibold tracking-wider mb-2 flex items-center justify-center gap-1.5">
+              <Sparkles className="w-3.5 h-3.5 text-primary" /> Quick Voice Commands
+            </p>
+            <div className="flex flex-wrap justify-center gap-2">
+              {[
+                "What's my heart rate?",
+                "What's my temperature?",
+                "What is my blood oxygen?",
+                "When is my next medicine?",
+              ].map((cmd) => (
+                <button
+                  key={cmd}
+                  onClick={() => {
+                    hapticFeedback.light();
+                    setTranscript(`You asked: "${cmd}"`);
+                    processCommand(cmd.toLowerCase());
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-secondary/80 hover:bg-secondary text-xs font-medium text-foreground border border-border/60 hover:border-primary/40 transition-all cursor-pointer"
+                >
+                  &ldquo;{cmd}&rdquo;
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
       </div>

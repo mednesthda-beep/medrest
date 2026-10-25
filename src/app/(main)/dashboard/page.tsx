@@ -4,6 +4,7 @@ import { Activity, Heart, Thermometer, Wind, BedDouble, Pill, PersonStanding } f
 import { HealthCard } from "@/components/dashboard/HealthCard";
 import { LiveChart } from "@/components/dashboard/LiveChart";
 import { PressureHeatmap } from "@/components/dashboard/PressureHeatmap";
+import { CompanionQuickHub } from "@/components/dashboard/CompanionQuickHub";
 import { useAuthStore } from "@/lib/store";
 import { useSensorStore } from "@/lib/sensors";
 
@@ -32,6 +33,9 @@ export default function DashboardPage() {
           System Online & Monitoring
         </div>
       </header>
+
+      {/* Mobile Companion Quick Hub & Real-Time Presence */}
+      <CompanionQuickHub />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <HealthCard 

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/ui/Sidebar";
 import { TopNav } from "@/components/ui/TopNav";
+import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
+import { MobileDrawer } from "@/components/ui/MobileDrawer";
 import { useAuthStore } from "@/lib/store";
 import { useSensorStore } from "@/lib/sensors";
 import { supabase } from "@/lib/supabase";
@@ -108,12 +110,14 @@ export default function MainLayout({
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
+      <MobileDrawer />
       <div className="flex-1 flex flex-col min-w-0">
         <TopNav />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-4 md:p-8 pb-24 md:pb-8">
           {children}
         </main>
       </div>
+      <MobileBottomNav />
     </div>
   );
 }
