@@ -37,6 +37,42 @@ let latestSensorData: SensorDataPayload = {
 
 const sensorHistory: SensorDataPayload[] = [];
 
+const ESP32_IP = process.env.ESP32_IP || '10.157.164.158';
+
+async function fetchDirectFromESP32(): Promise<SensorDataPayload | null> {
+  if (!ESP32_IP) return null;
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 600);
+    const res = await fetch(`http://${ESP32_IP}/api/sensor-data`, {
+      signal: controller.signal,
+      cache: 'no-store',
+    });
+    clearTimeout(timeoutId);
+    if (res.ok) {
+      const data = await res.json();
+      return {
+        heartRate: Number(data.heartRate ?? 0),
+        spo2: Number(data.spo2 ?? (data.heartRate > 0 ? 98 : 0)),
+        temperature: Number(data.temperature ?? 0),
+        movement: {
+          x: Number(data.movement?.x ?? 0),
+          y: Number(data.movement?.y ?? 0),
+          z: Number(data.movement?.z ?? 0),
+        },
+        pressure: {
+          fsr1: Number(data.fsr ?? data.pressure?.fsr1 ?? 0),
+        },
+        patientPresent: Boolean(data.patientPresent ?? (data.heartRate > 0 || (data.fsr && data.fsr > 100))),
+        timestamp: data.timestamp || new Date().toISOString(),
+      };
+    }
+  } catch {
+    // ESP32 may be offline or on separate subnet
+  }
+  return null;
+}
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -51,6 +87,22 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
+  // If no live telemetry was POSTed recently, attempt direct fetch from ESP32 IP
+  const isStale =
+    !latestSensorData.timestamp ||
+    Date.now() - new Date(latestSensorData.timestamp).getTime() > 2500;
+
+  if (isStale) {
+    const directData = await fetchDirectFromESP32();
+    if (directData) {
+      latestSensorData = directData;
+      sensorHistory.push({ ...directData });
+      if (sensorHistory.length > 50) {
+        sensorHistory.shift();
+      }
+    }
+  }
+
   try {
     // Fetch latest telemetry history directly from Supabase
     const { data, error } = await supabase
@@ -76,7 +128,16 @@ export async function GET() {
         timestamp: row.created_at,
       }));
 
-      const latest = history[history.length - 1];
+      let latest = history[history.length - 1];
+
+      // Prioritize live in-memory reading for instant zero-lag dashboard updates
+      if (
+        latestSensorData &&
+        latestSensorData.timestamp &&
+        (!latest || new Date(latestSensorData.timestamp).getTime() >= new Date(latest.timestamp).getTime())
+      ) {
+        latest = latestSensorData;
+      }
 
       return NextResponse.json(
         {
@@ -142,6 +203,10 @@ export async function POST(request: Request) {
     if (sensorHistory.length > 50) {
       sensorHistory.shift();
     }
+
+    console.log(
+      `[ESP32 Live Telemetry] FSR=${pressureObj.fsr1} | Temp=${latestSensorData.temperature}°C | HR=${latestSensorData.heartRate} BPM | SpO2=${latestSensorData.spo2}% | Present=${isPresent}`
+    );
 
     // Await saving reading to Supabase so serverless container doesn't terminate before completion
     try {

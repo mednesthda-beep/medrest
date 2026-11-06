@@ -78,9 +78,25 @@ export default function DevicesPage() {
             <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
               <div className="flex items-center gap-3">
                 <Wifi className="w-5 h-5 text-primary" />
-                <span>Network</span>
+                <span>Wi-Fi Network</span>
               </div>
-              <span className="text-foreground text-sm font-medium">Home-WiFi-5G</span>
+              <span className="text-foreground text-sm font-medium">Pooja</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Activity className="w-5 h-5 text-emerald-400" />
+                <span>ESP32 Device IP</span>
+              </div>
+              <span className="text-emerald-400 font-mono text-sm font-semibold">10.157.164.158</span>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Cpu className="w-5 h-5 text-muted-foreground" />
+                <span>Target Server</span>
+              </div>
+              <span className="text-muted-foreground font-mono text-xs truncate max-w-[200px]" title="http://192.168.1.5:3000/api/sensor-data">
+                http://192.168.1.5:3000/api/sensor-data
+              </span>
             </div>
             <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
               <div className="flex items-center gap-3">
