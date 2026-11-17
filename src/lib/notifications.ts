@@ -2,6 +2,15 @@
 
 import { hapticFeedback } from './haptics';
 
+export interface InAppToastPayload {
+  id: string;
+  title: string;
+  body: string;
+  type: 'emergency' | 'success' | 'warning' | 'info';
+  timestamp: string;
+  url?: string;
+}
+
 export async function requestNotificationPermission(): Promise<boolean> {
   if (typeof window === 'undefined' || !('Notification' in window)) {
     return false;
@@ -12,10 +21,14 @@ export async function requestNotificationPermission(): Promise<boolean> {
   }
 
   if (Notification.permission !== 'denied') {
-    const permission = await Notification.requestPermission();
-    if (permission === 'granted') {
-      hapticFeedback.success();
-      return true;
+    try {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        hapticFeedback.success();
+        return true;
+      }
+    } catch {
+      return false;
     }
   }
 
@@ -41,19 +54,34 @@ export async function sendLocalNotification(
     url?: string;
     requireInteraction?: boolean;
     alarm?: boolean;
+    type?: 'emergency' | 'success' | 'warning' | 'info';
   }
 ) {
+  // 1. Haptic feedback
   if (options.alarm) {
     hapticFeedback.alarm();
   } else {
     hapticFeedback.medium();
   }
 
+  // 2. Dispatch custom in-app banner/toast event so user ALWAYS sees confirmation
+  if (typeof window !== 'undefined') {
+    const toastDetail: InAppToastPayload = {
+      id: `toast-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      title,
+      body: options.body,
+      type: options.type || (options.alarm ? 'emergency' : options.tag?.includes('safe') || options.tag?.includes('ack') ? 'success' : 'info'),
+      timestamp: new Date().toLocaleTimeString(),
+      url: options.url,
+    };
+    window.dispatchEvent(new CustomEvent('mednest-toast', { detail: toastDetail }));
+  }
+
   if (!isNotificationSupported()) {
     return;
   }
 
-  // If permission is not yet decided, prompt user immediately
+  // 3. Prompt for browser permission if not yet decided
   if (Notification.permission === 'default') {
     const granted = await requestNotificationPermission();
     if (!granted) return;
@@ -61,11 +89,18 @@ export async function sendLocalNotification(
     return;
   }
 
+  // 4. Trigger system push notification (safely without hanging on serviceWorker)
   try {
-    if ('serviceWorker' in navigator) {
-      const registration = await navigator.serviceWorker.ready;
-      if (registration && registration.showNotification) {
-        await registration.showNotification(title, {
+    let handled = false;
+
+    // Check if an active service worker is ready with a quick timeout
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+      const reg = await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<null>((r) => setTimeout(() => r(null), 200)),
+      ]);
+      if (reg && reg.showNotification) {
+        await reg.showNotification(title, {
           body: options.body,
           icon: options.icon || '/icons/icon-192x192.png',
           badge: options.badge || '/icons/icon-192x192.png',
@@ -73,19 +108,63 @@ export async function sendLocalNotification(
           requireInteraction: options.requireInteraction ?? false,
           data: { url: options.url || '/dashboard' },
         });
-        return;
+        handled = true;
       }
     }
 
-    // Fallback to standard Notification API
-    new Notification(title, {
-      body: options.body,
-      icon: options.icon || '/icons/icon-192x192.png',
-      tag: options.tag || 'mednest-alert',
-    });
+    if (!handled && typeof Notification !== 'undefined') {
+      const notif = new Notification(title, {
+        body: options.body,
+        icon: options.icon || '/icons/icon-192x192.png',
+        tag: options.tag || 'mednest-alert',
+        requireInteraction: options.requireInteraction ?? false,
+      });
+      notif.onclick = () => {
+        window.focus();
+        if (options.url) {
+          window.location.href = options.url;
+        }
+      };
+    }
   } catch (err) {
-    console.warn('[Notification] Failed to trigger notification:', err);
+    console.warn('[Notification] Failed to trigger system notification:', err);
   }
+}
+
+export async function triggerAlertAcknowledged(responderName = 'Caregiver') {
+  await sendLocalNotification('✅ Emergency Alert Acknowledged', {
+    body: `${responderName} has acknowledged the emergency alert and is currently assisting the patient.`,
+    tag: 'sos-acknowledged',
+    alarm: false,
+    requireInteraction: false,
+    url: '/dashboard',
+    type: 'success',
+  });
+}
+
+export async function triggerPatientSafeConfirmation() {
+  await sendLocalNotification('🟢 Patient Safe (Alarm Cancelled)', {
+    body: 'Patient clicked "I\'m OK". False alarm has been safely cancelled.',
+    tag: 'sos-safe',
+    alarm: false,
+    requireInteraction: false,
+    url: '/dashboard',
+    type: 'success',
+  });
+}
+
+export async function triggerUnresponsiveSosAlarm(
+  location = 'Smart Bed Chamber 1',
+  vitals = 'HR: 142 BPM, SpO2: 91%'
+) {
+  await sendLocalNotification('🚨 CRITICAL: Unresponsive Patient Emergency!', {
+    body: `Patient did not respond to countdown! GPS Location: ${location}. Vitals: ${vitals}. Dispatching emergency response!`,
+    tag: 'sos-unresponsive',
+    requireInteraction: true,
+    alarm: true,
+    url: '/emergency',
+    type: 'emergency',
+  });
 }
 
 // Pre-built notification triggers for Guardian & Patient
@@ -96,6 +175,7 @@ export async function triggerBedExitAlarm(patientName = 'Patient') {
     requireInteraction: true,
     alarm: true,
     url: '/monitoring',
+    type: 'warning',
   });
 }
 
@@ -106,6 +186,7 @@ export async function triggerVitalSpikeAlarm(metric: 'Heart Rate' | 'SpO2' | 'Te
     requireInteraction: true,
     alarm: true,
     url: '/monitoring',
+    type: 'warning',
   });
 }
 
@@ -115,5 +196,6 @@ export async function triggerMedicationAlert(medicationName: string, dosage: str
     tag: 'medication',
     alarm: false,
     url: '/medications',
+    type: 'info',
   });
 }

@@ -1,14 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { AlertTriangle, MapPin, Phone, CheckCircle2, ShieldAlert, Bell, Volume2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { 
+  AlertTriangle, MapPin, Phone, CheckCircle2, 
+  ShieldAlert, Volume2, ExternalLink, RefreshCw 
+} from "lucide-react";
 import { useAuthStore } from "@/lib/store";
 import { useSensorStore } from "@/lib/sensors";
+import { getPatientLocation, type PatientLocation } from "@/lib/geolocation";
+import { stopEmergencySiren } from "@/lib/alarmAudio";
+import { 
+  triggerAlertAcknowledged, 
+  triggerPatientSafeConfirmation 
+} from "@/lib/notifications";
 
 export default function EmergencyPage() {
-  const { role, triggerEmergencySos, dismissEmergencySos, isSosModalOpen } = useAuthStore();
+  const { role, user, triggerEmergencySos, dismissEmergencySos, isSosModalOpen } = useAuthStore();
   const { currentData } = useSensorStore();
   const [acknowledged, setAcknowledged] = useState(false);
+  const [location, setLocation] = useState<PatientLocation | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+
+  // Fetch real GPS location on mount
+  useEffect(() => {
+    setIsLoadingLocation(true);
+    getPatientLocation().then((loc) => {
+      setLocation(loc);
+      setIsLoadingLocation(false);
+    });
+  }, []);
 
   const handleManualSos = () => {
     setAcknowledged(false);
@@ -18,8 +38,20 @@ export default function EmergencyPage() {
     );
   };
 
+  // 1. Caregiver clicks "Acknowledge Alert"
   const handleAcknowledge = () => {
     setAcknowledged(true);
+    stopEmergencySiren();
+    const responderName = user?.name || (role === "guardian" ? "Caregiver" : "Emergency Responder");
+    triggerAlertAcknowledged(responderName);
+    dismissEmergencySos();
+  };
+
+  // 2. Patient clicks "I'm OK (Cancel Alarm)"
+  const handlePatientSafe = () => {
+    setAcknowledged(true);
+    stopEmergencySiren();
+    triggerPatientSafeConfirmation();
     dismissEmergencySos();
   };
 
@@ -60,13 +92,18 @@ export default function EmergencyPage() {
                   ACTIVE SOS ALARM
                 </span>
                 <span className="text-xs text-muted-foreground flex items-center gap-1 font-mono">
-                  <Volume2 className="w-3.5 h-3.5 text-destructive" /> Siren Active
+                  <Volume2 className="w-3.5 h-3.5 text-destructive" /> Siren Standby / Countdown
                 </span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-foreground">Possible Fall / Distress Detected</h2>
               <div className="text-sm text-foreground/90 space-y-1">
-                <p><strong>Ward:</strong> Bed Chamber 1 (Home Care)</p>
+                <p><strong>Ward / Room:</strong> Smart Pillow Chamber 1 (Home Care)</p>
                 <p><strong>Alarm Dispatched:</strong> {new Date().toLocaleTimeString()}</p>
+                {location && (
+                  <p className="text-xs text-muted-foreground font-mono">
+                    <strong>GPS Coordinates:</strong> {location.lat}, {location.lng} (±{location.accuracy}m)
+                  </p>
+                )}
                 <div className="flex gap-4 mt-2 font-mono text-xs sm:text-sm bg-background/40 p-2.5 rounded-xl border border-destructive/20 w-fit">
                   <span className="text-health-heart font-bold">HR: {currentData.heartRate > 0 ? `${currentData.heartRate} BPM` : '142 BPM'}</span>
                   <span>•</span>
@@ -80,26 +117,26 @@ export default function EmergencyPage() {
             <div className="flex flex-col gap-3 w-full md:w-auto">
               <button 
                 onClick={handleAcknowledge}
-                className="bg-destructive hover:bg-destructive/90 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg shadow-destructive/20 cursor-pointer"
+                className="bg-destructive hover:bg-destructive/90 text-white font-bold py-3.5 px-6 rounded-xl transition-all shadow-lg shadow-destructive/20 cursor-pointer flex items-center justify-center gap-2 active:scale-98"
               >
-                Acknowledge Alert
+                <span>Acknowledge Alert</span>
               </button>
-              {role === 'patient' ? (
-                <button 
-                  onClick={handleAcknowledge}
-                  className="bg-secondary hover:bg-secondary/80 text-foreground py-3 px-6 rounded-xl transition-colors font-medium border border-border cursor-pointer text-center"
-                >
-                  I&apos;m OK (Cancel Alarm)
-                </button>
-              ) : (
-                <a 
-                  href="tel:108"
-                  className="bg-secondary hover:bg-secondary/80 text-foreground py-3 px-6 rounded-xl transition-colors font-medium border border-border flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <Phone className="w-4 h-4 text-emerald-400" />
-                  <span>Call Emergency 108</span>
-                </a>
-              )}
+              
+              <button 
+                onClick={handlePatientSafe}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 px-6 rounded-xl transition-colors font-bold shadow-md shadow-emerald-600/20 flex items-center justify-center gap-2 cursor-pointer text-center active:scale-98"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                <span>I am OK (Cancel Alarm)</span>
+              </button>
+
+              <a 
+                href="tel:108"
+                className="bg-secondary hover:bg-secondary/80 text-foreground py-2.5 px-4 rounded-xl transition-colors font-medium border border-border flex items-center justify-center gap-2 cursor-pointer text-xs"
+              >
+                <Phone className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Call Emergency 108</span>
+              </a>
             </div>
           </div>
         </div>
@@ -108,7 +145,7 @@ export default function EmergencyPage() {
           <CheckCircle2 className="w-12 h-12 text-health-good mx-auto" />
           <div>
             <h2 className="text-xl font-bold text-foreground">All Clear • System Normal</h2>
-            <p className="text-muted-foreground text-sm mt-1">Previous alarm was acknowledged. Smart pillow monitoring is active.</p>
+            <p className="text-muted-foreground text-sm mt-1">Emergency alarm was safely acknowledged. Live sensor telemetry is active.</p>
           </div>
           <button
             onClick={handleManualSos}
@@ -119,19 +156,62 @@ export default function EmergencyPage() {
         </div>
       )}
 
-      {/* Map (Simulated) */}
-      <div className="glass-card rounded-2xl p-6 border border-border/50">
-        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-          <MapPin className="w-5 h-5 text-primary" />
-          Patient Location
-        </h3>
+      {/* Patient Location GPS Map Card */}
+      <div className="glass-card rounded-2xl p-6 border border-border/50 space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-xl font-bold flex items-center gap-2">
+            <MapPin className="w-5 h-5 text-primary" />
+            Patient GPS Coordinates & Live Location
+          </h3>
+          {location?.mapsUrl && (
+            <a
+              href={location.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 flex items-center gap-1.5 transition-colors"
+            >
+              <ExternalLink className="w-3.5 h-3.5" />
+              <span>Open in Google Maps</span>
+            </a>
+          )}
+        </div>
+
+        <div className="p-4 rounded-xl bg-secondary/40 border border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">
+              {isLoadingLocation ? "Detecting current coordinates..." : location ? location.address : "Smart Bed Chamber 1, Home Ward"}
+            </p>
+            {location && (
+              <p className="text-xs text-muted-foreground font-mono">
+                Latitude: {location.lat} | Longitude: {location.lng} | Radius: ±{location.accuracy}m
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setIsLoadingLocation(true);
+              getPatientLocation().then((loc) => {
+                setLocation(loc);
+                setIsLoadingLocation(false);
+              });
+            }}
+            className="p-2 rounded-lg bg-card hover:bg-secondary border border-border text-xs font-medium flex items-center gap-1.5 cursor-pointer shrink-0"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoadingLocation ? "animate-spin" : ""}`} />
+            <span>Refresh GPS</span>
+          </button>
+        </div>
+
         <div className="h-64 bg-secondary/30 border border-border/50 rounded-xl flex items-center justify-center overflow-hidden relative">
-          <div className="absolute inset-0 opacity-20 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=34.0522,-118.2437&zoom=13&size=800x400&sensor=false')] bg-cover bg-center"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="absolute inset-0 opacity-20 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=13.0827,80.2707&zoom=14&size=800x400&sensor=false')] bg-cover bg-center"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
             <div className="relative">
-              <MapPin className="w-8 h-8 text-destructive relative z-10 drop-shadow-lg" />
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-destructive/30 rounded-full animate-ping" />
+              <MapPin className="w-9 h-9 text-destructive relative z-10 drop-shadow-lg animate-bounce" />
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-destructive/30 rounded-full animate-ping" />
             </div>
+            <span className="mt-2 px-2.5 py-0.5 rounded-full bg-card/90 border border-border text-[11px] font-mono font-bold shadow-md">
+              {location ? `${location.lat}, ${location.lng}` : "13.0827, 80.2707"}
+            </span>
           </div>
         </div>
       </div>

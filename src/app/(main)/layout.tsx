@@ -7,6 +7,7 @@ import { TopNav } from "@/components/ui/TopNav";
 import { MobileBottomNav } from "@/components/ui/MobileBottomNav";
 import { MobileDrawer } from "@/components/ui/MobileDrawer";
 import { EmergencySosModal } from "@/components/emergency/EmergencySosModal";
+import { NotificationToast } from "@/components/notifications/NotificationToast";
 import { useAuthStore } from "@/lib/store";
 import { useSensorStore } from "@/lib/sensors";
 import { supabase } from "@/lib/supabase";
@@ -120,6 +121,7 @@ export default function MainLayout({
         </main>
       </div>
       <MobileBottomNav />
+      <NotificationToast />
       <EmergencySosModal />
     </div>
   );

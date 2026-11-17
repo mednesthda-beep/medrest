@@ -97,19 +97,17 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     set({ isSosModalOpen: true, activeSosAlert: alertData });
 
-    // 1. Play loud emergency siren via Web Audio
-    playEmergencySiren(8);
-
-    // 2. Continuous emergency vibration on mobile devices
+    // Continuous emergency vibration on mobile devices
     hapticFeedback.alarm();
 
-    // 3. Dispatch system push notification
+    // Dispatch system push notification
     sendLocalNotification(title, {
       body: message,
       tag: 'emergency-sos',
       requireInteraction: true,
-      alarm: true,
+      alarm: false,
       url: '/emergency',
+      type: 'warning',
     }).catch(() => {});
   },
 
