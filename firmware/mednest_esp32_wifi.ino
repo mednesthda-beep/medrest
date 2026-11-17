@@ -26,7 +26,7 @@ const char *WIFI_SSID = "Pooja";
 const char *WIFI_PASSWORD = "Poojas01";
 
 // Target Dashboard IP (Local PC dev server):
-const char *SERVER_URL = "http://192.168.1.5:3000/api/sensor-data";
+const char *SERVER_URL = "http://10.113.66.62:3000/api/sensor-data";
 
 // Telemetry interval (transmit every 1 second)
 const unsigned long TELEMETRY_INTERVAL = 1000;

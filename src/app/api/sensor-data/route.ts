@@ -37,7 +37,7 @@ let latestSensorData: SensorDataPayload = {
 
 const sensorHistory: SensorDataPayload[] = [];
 
-const ESP32_IP = process.env.ESP32_IP || '10.157.164.158';
+const ESP32_IP = process.env.ESP32_IP || '10.113.66.158';
 
 async function fetchDirectFromESP32(): Promise<SensorDataPayload | null> {
   if (!ESP32_IP) return null;
