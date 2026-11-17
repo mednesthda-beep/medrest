@@ -39,6 +39,35 @@ export const useSensorStore = create<SensorState>((set) => ({
     history: [...state.history.slice(-30), data],
   })),
   generateReading: () => {
-    // Disabled fake data generation
-  }
+    set((state) => {
+      const isPresent = state.demoStatus !== 'inactive';
+      const hrBase =
+        state.demoStatus === 'emergency' ? 128 : state.demoStatus === 'abnormal' ? 98 : 74;
+      const tempBase = state.demoStatus === 'emergency' ? 38.9 : 36.6;
+      const spo2Base = state.demoStatus === 'emergency' ? 91 : 98;
+
+      const newReading: SensorData = {
+        heartRate: isPresent ? Math.round(hrBase + (Math.random() * 4 - 2)) : 0,
+        spo2: isPresent ? Math.round(spo2Base + (Math.random() * 2 - 1)) : 0,
+        temperature: isPresent
+          ? parseFloat((tempBase + (Math.random() * 0.4 - 0.2)).toFixed(2))
+          : 24.5,
+        movement: {
+          x: parseFloat((Math.random() * 0.2 - 0.1).toFixed(2)),
+          y: parseFloat((Math.random() * 0.2 - 0.1).toFixed(2)),
+          z: 9.81,
+        },
+        pressure: {
+          fsr1: isPresent ? 850 + Math.floor(Math.random() * 50) : 0,
+        },
+        patientPresent: isPresent,
+        timestamp: new Date().toISOString(),
+      };
+
+      return {
+        currentData: newReading,
+        history: [...state.history.slice(-30), newReading],
+      };
+    });
+  },
 }));
