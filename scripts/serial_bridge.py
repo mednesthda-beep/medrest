@@ -2,29 +2,38 @@ import os
 import sys
 import time
 import re
+import glob
 import urllib.request
 import json
 
-PORT = "/dev/cu.usbserial-5C3D0866341"
 API_URL = "http://localhost:3000/api/sensor-data"
 
-def run_bridge():
-    print(f"[Serial Bridge] Connecting to {PORT}...")
+def find_serial_port():
+    ports = glob.glob("/dev/cu.usb*") + glob.glob("/dev/tty.usb*")
+    return ports[0] if ports else "/dev/cu.usbserial-5C3D0866341"
+
+def open_port():
+    import termios
+    port = find_serial_port()
+    if not os.path.exists(port):
+        return None, port
     try:
-        import termios
-        fd = os.open(PORT, os.O_RDONLY | os.O_NOCTTY)
+        fd = os.open(port, os.O_RDONLY | os.O_NOCTTY)
         attrs = termios.tcgetattr(fd)
         attrs[4] = termios.B115200
         attrs[5] = termios.B115200
         termios.tcsetattr(fd, termios.TCSANOW, attrs)
-        print(f"[Serial Bridge] Successfully connected to {PORT} at 115200 baud.")
+        return fd, port
     except Exception as e:
-        print(f"[Serial Bridge Error] Cannot open {PORT}: {e}")
-        print("Note: If Arduino IDE Serial Monitor is open, close it so this bridge can read.")
-        return
+        return None, f"{port} ({e})"
+
+def run_bridge():
+    print("[Serial Bridge] Starting robust auto-reconnecting serial bridge...")
+    fd = None
+    port_name = ""
 
     buffer = ""
-    temp = 33.38
+    temp = 35.88
     hr = 0.0
     spo2 = 0.0
     fsr = 0
@@ -32,6 +41,15 @@ def run_bridge():
     ax, ay, az = 0.0, 0.0, 0.0
 
     while True:
+        if fd is None:
+            fd, port_name = open_port()
+            if fd is not None:
+                print(f"[Serial Bridge] Connected to {port_name} at 115200 baud.")
+                buffer = ""
+            else:
+                time.sleep(1)
+                continue
+
         try:
             chunk = os.read(fd, 256).decode("utf-8", errors="ignore")
             if not chunk:
@@ -90,8 +108,16 @@ def run_bridge():
                         print(f"[Bridge Forwarded] Temp={temp}°C | FSR={fsr} | HR={hr} | Present={present}")
                     except Exception as post_err:
                         pass
-        except Exception as read_err:
-            print(f"[Serial Read Error]: {read_err}")
+        except OSError as e:
+            print(f"[Serial Disconnected]: {e}. Attempting reconnection...")
+            try:
+                os.close(fd)
+            except Exception:
+                pass
+            fd = None
+            time.sleep(1)
+        except Exception as general_err:
+            print(f"[Bridge Error]: {general_err}")
             time.sleep(1)
 
 if __name__ == "__main__":

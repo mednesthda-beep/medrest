@@ -4,9 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Activity, Mic, Pill, AlertTriangle } from "lucide-react";
 import { hapticFeedback } from "@/lib/haptics";
+import { useAuthStore } from "@/lib/store";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const { triggerEmergencySos } = useAuthStore();
 
   const navItems = [
     {
@@ -71,25 +73,27 @@ export function MobileBottomNav() {
 
           if (item.isEmergency) {
             return (
-              <Link
+              <button
                 key={item.name}
-                href={item.href}
-                onClick={() => hapticFeedback.alarm()}
-                className="flex flex-col items-center py-1 px-2.5 rounded-xl transition-colors cursor-pointer"
+                type="button"
+                onClick={() => {
+                  triggerEmergencySos(
+                    "🚨 SOS EMERGENCY DISTRESS",
+                    "Patient triggered one-touch SOS from companion bar. Immediate assistance required!"
+                  );
+                }}
+                className="flex flex-col items-center py-1 px-2.5 rounded-xl transition-colors cursor-pointer group"
+                title="Trigger Emergency SOS Alarm"
               >
                 <div className="relative">
-                  <Icon className={`w-5 h-5 transition-colors ${
-                    isActive ? "text-destructive" : "text-destructive/80"
-                  }`} />
+                  <Icon className="w-5 h-5 text-destructive group-hover:scale-110 transition-transform animate-pulse" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-destructive animate-ping" />
                   <span className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-destructive" />
                 </div>
-                <span className={`text-[10px] font-bold mt-1 transition-colors ${
-                  isActive ? "text-destructive" : "text-destructive/80"
-                }`}>
+                <span className="text-[10px] font-bold mt-1 text-destructive uppercase tracking-wider">
                   {item.name}
                 </span>
-              </Link>
+              </button>
             );
           }
 

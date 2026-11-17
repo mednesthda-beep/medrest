@@ -7,12 +7,12 @@ import { hapticFeedback } from "@/lib/haptics";
 import { sendLocalNotification, requestNotificationPermission } from "@/lib/notifications";
 import { 
   BedDouble, Mic, Bell, UserCheck, 
-  HeartPulse, CheckCircle2, ChevronRight, Usb, Sparkles 
+  HeartPulse, CheckCircle2, ChevronRight, Usb, Sparkles, AlertTriangle 
 } from "lucide-react";
 import Link from "next/link";
 
 export function CompanionQuickHub() {
-  const { role, setRole } = useAuthStore();
+  const { role, setRole, triggerEmergencySos } = useAuthStore();
   const { currentData, updateRealData, generateReading } = useSensorStore();
   const [notificationSent, setNotificationSent] = useState(false);
   const [isSerialConnected, setIsSerialConnected] = useState(false);
@@ -241,6 +241,21 @@ export function CompanionQuickHub() {
                 <span>Test Alarm</span>
               </>
             )}
+          </button>
+
+          {/* Emergency SOS Trigger */}
+          <button
+            onClick={() => {
+              triggerEmergencySos(
+                "🚨 CRITICAL SOS ALERT",
+                "Patient distress triggered from Companion Quick Hub. Vitals monitoring active."
+              );
+            }}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-destructive hover:bg-destructive/90 text-white text-xs font-bold transition-all cursor-pointer shadow-md shadow-destructive/25 animate-pulse"
+            title="Trigger Full Emergency SOS Popup & Siren"
+          >
+            <AlertTriangle className="w-3.5 h-3.5 text-white" />
+            <span>Emergency SOS</span>
           </button>
 
           {/* Quick Voice Assistant Trigger */}

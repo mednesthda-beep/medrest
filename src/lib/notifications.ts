@@ -49,7 +49,15 @@ export async function sendLocalNotification(
     hapticFeedback.medium();
   }
 
-  if (!isNotificationSupported() || Notification.permission !== 'granted') {
+  if (!isNotificationSupported()) {
+    return;
+  }
+
+  // If permission is not yet decided, prompt user immediately
+  if (Notification.permission === 'default') {
+    const granted = await requestNotificationPermission();
+    if (!granted) return;
+  } else if (Notification.permission !== 'granted') {
     return;
   }
 
