@@ -64,15 +64,16 @@ export default function MainLayout({
 
   // Real-time synchronization with ESP32 sensor endpoint
   useEffect(() => {
-    if (!isAuthenticated && isVerifying) return;
-
     let active = true;
     const pollSensorData = async () => {
       try {
-        const res = await fetch('/api/sensor-data');
+        const res = await fetch('/api/sensor-data', {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' },
+        });
         if (res.ok) {
           const json = await res.json();
-          if (active && json.currentData && (json.currentData.timestamp || json.currentData.temperature > 0 || json.currentData.heartRate > 0)) {
+          if (active && json.currentData) {
             updateRealData(json.currentData);
           }
         }
@@ -88,7 +89,7 @@ export default function MainLayout({
       active = false;
       clearInterval(intervalId);
     };
-  }, [updateRealData, isAuthenticated, isVerifying]);
+  }, [updateRealData]);
 
   if (isVerifying) {
     return (

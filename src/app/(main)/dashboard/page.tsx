@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Activity, Heart, Thermometer, Wind, BedDouble, Pill, PersonStanding } from "lucide-react";
 import { HealthCard } from "@/components/dashboard/HealthCard";
 import { LiveChart } from "@/components/dashboard/LiveChart";
@@ -10,7 +11,33 @@ import { useSensorStore } from "@/lib/sensors";
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { currentData } = useSensorStore();
+  const { currentData, updateRealData } = useSensorStore();
+
+  // Active polling directly inside dashboard view
+  useEffect(() => {
+    let active = true;
+    const fetchTelemetry = async () => {
+      try {
+        const res = await fetch("/api/sensor-data", {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (res.ok) {
+          const json = await res.json();
+          if (active && json.currentData) {
+            updateRealData(json.currentData);
+          }
+        }
+      } catch {}
+    };
+
+    fetchTelemetry();
+    const timer = setInterval(fetchTelemetry, 1000);
+    return () => {
+      active = false;
+      clearInterval(timer);
+    };
+  }, [updateRealData]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
